@@ -89,7 +89,7 @@ ADIS16497::ADIS16497(int bus, const char *path_accel, const char *path_gyro, uin
 	_rotation(rotation)
 {
 
-	//_debug_enabled = true;
+	_debug_enabled = true;
 
 #ifdef GPIO_SPI1_RESET_ADIS16497
 	// ADIS16497 configure reset
@@ -326,7 +326,7 @@ ADIS16497::probe()
 bool
 ADIS16497::self_test_sensor()
 {
-	PX4_DEBUG("self test sensor");
+	DEVICE_DEBUG("self test sensor");
 
 	// self test (global command bit 1)
 	uint8_t value[2] = {};
@@ -489,18 +489,29 @@ ADIS16497::measure()
 		return -EIO;
 	}
 
+	/*
 	// Calculate checksum and compare
+	uint16_t *checksum_helper = (uint16_t *)&adis_report.SYS_E_FLAG;
 
-	// if (adis_report.checksum != checksum) {
-	// 	PX4_DEBUG("adis_report.checksum: %#X vs calculated: %#X", adis_report.checksum, checksum);
-	// 	perf_count(_bad_transfers);
-	// 	perf_end(_sample_perf);
-	// 	return -EIO;
-	// }
+	uint32_t checksum = 0;
+
+	for (int i = 0; i < 15; i++) {
+		checksum += checksum_helper[i];
+	}
+
+	uint32_t checksum_msg = (uint32_t)adis_report.CRC_UPR << 16 | adis_report.CRC_LWR;
+
+	if (checksum_msg != checksum) {
+		DEVICE_DEBUG("adis_report.checksum: %#X vs calculated: %#X", checksum_msg, checksum);
+		perf_count(_bad_transfers);
+		perf_end(_sample_perf);
+		return -EIO;
+	}
+	*/
 
 	// Check all Status/Error Flag Indicators (SYS_E_FLAG)
 	if (adis_report.SYS_E_FLAG != 0) {
-		PX4_DEBUG("SYS_E_FLAG: %#X", adis_report.SYS_E_FLAG);
+		DEVICE_DEBUG("SYS_E_FLAG: %#X", adis_report.SYS_E_FLAG);
 		perf_count(_bad_transfers);
 		perf_end(_sample_perf);
 		return -EIO;
@@ -509,7 +520,6 @@ ADIS16497::measure()
 	publish_accel(t, adis_report);
 	publish_gyro(t, adis_report);
 
-	/* stop measuring */
 	perf_end(_sample_perf);
 	return OK;
 }

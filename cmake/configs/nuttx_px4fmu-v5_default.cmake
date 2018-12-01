@@ -29,6 +29,7 @@ set(config_module_list
 	drivers/imu/bmi160
 	drivers/imu/mpu6000
 	drivers/imu/mpu9250
+	drivers/imu/adis16497
 	drivers/irlock
 	drivers/mkblctrl
 	drivers/oreoled
